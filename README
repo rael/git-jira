@@ -1,0 +1,36 @@
+Scripts to tie git and jira through Jira issues and git branches.
+
+[Add doc here on how to config git to use git-jira]
+
+% git jira-config
+[Prompt user for parameters to connect to Jira, store in $HOME config file.
+Among other things: default project, default component, assignee, etc.]
+
+% git jira-open [-p <project>] [-c <component>] [-a <assignee>] [-s <summary>]
+
+or
+
+% git jira open
+[Editor session]
+Project:
+Component:
+Git branch suffix:
+Summary:
+Details:
+
+jg open creates a new issue in Jira for the given component
+and creates a new branch in git with a name from the Jira issue id
+and the given suffix.  Example, after setting config options for
+default project, component, assignee, etc.:
+
+% git jira open -s "Create restricted qc user and script for release copies"
+[Editor]
+Details:
+QC needs to be able to access our release table, but not with our
+production user grants.  Create a new user with read-only acces to
+our staged releases and a script to copy the staged releases to the
+qc server.
+[Exit Editor]
+Created git branch PRK-14113
+
+% git jira-close <issue id>
