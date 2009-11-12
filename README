@@ -1,36 +1,32 @@
-Scripts to tie git and jira through Jira issues and git branches.
+Script(s) to tie git and jira through Jira issues and git branches.
 
-[Add doc here on how to config git to use git-jira]
+To use the git_jira.sh script through a git alias, put git_jira.sh
+somewhere, then execute a shell command like this:
 
-% git jira-config
-[Prompt user for parameters to connect to Jira, store in $HOME config file.
-Among other things: default project, default component, assignee, etc.]
+% git config --global alias.jira '!/home/me/bin/git_jira.sh'
 
-% git jira-open [-p <project>] [-c <component>] [-a <assignee>] [-s <summary>]
+You will need to specify the location of the Jira CLI jar file,
+the Jira server, your Jira user, and Jira password.  The script
+will prompt you for these (and save them) if you do not provide
+them in the config file.  To set them in your config file:
 
-or
+% git config --global jira.jar <path_to_jar>
+% git config --global jira.server <url for Jira server>
+% git config --global jira.user <Your Jira user id>
+% git config --global jira.password <Your Jira password>
 
-% git jira open
-[Editor session]
-Project:
-Component:
-Git branch suffix:
-Summary:
-Details:
+Then, if you like, set default project, component, and issue type:
 
-jg open creates a new issue in Jira for the given component
-and creates a new branch in git with a name from the Jira issue id
-and the given suffix.  Example, after setting config options for
-default project, component, assignee, etc.:
+% git config --global jira.component Component1
+% git config --global jira.project MyProject
+% git config --global jira.issuetype Bug
 
-% git jira open -s "Create restricted qc user and script for release copies"
-[Editor]
-Details:
-QC needs to be able to access our release table, but not with our
-production user grants.  Create a new user with read-only acces to
-our staged releases and a script to copy the staged releases to the
-qc server.
-[Exit Editor]
-Created git branch PRK-14113
+Then you can open a Jira issue and create a git branch based on
+the name of the issue:
 
-% git jira-close <issue id>
+% git jira open -s "Fix login permissions in user script"
+git branch MyProject-31233 created
+
+When done working on the issue, you can resolve it with:
+
+% git jira close <issue id>
