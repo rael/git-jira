@@ -5,6 +5,13 @@ somewhere, then execute a shell command like this:
 
 % git config --global alias.jira '!/home/me/bin/git_jira.sh'
 
+Download the Jira CLI from Atlassian.  You can go to this link:
+
+http://confluence.atlassian.com/display/JIRAEXT/JIRA+Command+Line+Interface
+
+or google 'jira-cli'.  Unpack the zip file somewhere.  Make sure you
+have a reasonably recent java installed.
+
 You will need to specify the location of the Jira CLI jar file,
 the Jira server, your Jira user, and Jira password.  The script
 will prompt you for these (and save them) if you do not provide
@@ -27,6 +34,11 @@ the name of the issue:
 % git jira open -s "Fix login permissions in user script"
 git branch MyProject-31233 created
 
+or, provide a suffix to help you remember what the branch is for:
+
+% git jira open -s "Fix login permissions in user script" -x fix_login_perms
+git branch MyProject-31233_fix_login_perms created
+
 When done working on the issue, you can resolve it with:
 
-% git jira close <issue id>
+% git jira close MyProject-31233
