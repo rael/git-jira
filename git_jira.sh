@@ -57,13 +57,15 @@ password="--password $GIT_JIRA_PASSWORD"
 conn="$server $user $password"
 
 usage() {
-    echo "Usage: ${0##*/} <open|close> [-a|--assignee <assignee>]"
+    echo "Usage: ${0##*/} <open|close|describe> [-a|--assignee <assignee>]"
     echo -e "open options:"
     echo -e "\t[-c|--component] <component> [-p|--project <project>]"
     echo -e "\t[-x|--suffix <suffix>] [-t|--issue_type <issue_type>]"
     echo -e "\t-s|--summary <summary>"
     echo -e "close options:"
     echo -e "\t-i|--issue <issue>"
+    echo -e "describe options (defaults to describing issue of current branch):"
+    echo -e "\t[-i|--issue <issue OR issue branch name>]"
     exit 0
 }
 
@@ -100,19 +102,21 @@ for arg; do
     case "$arg" in
         open) action=open ;;
         close) action=close ;;
+        describe) action=describe ;;
         *) echo "Invalid or extraneous action \"$arg\""; usage ;;
     esac
 done
 
 if [ -z "$action" ]; then
-    echo "You must provide an action (open|close)"
+    echo "You must provide an action (open|close|describe)"
     usage
 fi
 
-if [ "$action" != "open" -a "$action" != "close" ]; then
-    echo "action must be one of (open|close)"
-    usage
-fi
+#if [ "$action" != "open" -a "$action" != "close" \
+#     "$action" != "describe" ]; then
+#    echo "action must be one of (open|close|describe)"
+#    usage
+#fi
 
 case "$action" in
     open)
@@ -163,6 +167,22 @@ case "$action" in
         issue="--issue $issue"
         action="--action progressIssue $issue"
         java -jar $JIRA_JAR $conn $action --step "Resolve Issue" --resolution "Fixed"
+    ;;
+
+    describe)
+        branch=$(git branch | grep '\*' | sed 's/\* //')
+        if [ -z "$issue" ]; then
+            if [ "$branch" == "master" ]; then
+                echo "You need to supply an issue if you are not on an issue branch."
+                usage
+                exit 1
+            fi
+            issue=$(echo $branch | sed 's/_.*//')
+        else
+            issue=$(echo $issue | sed 's/_.*//')
+        fi
+        action="--action getIssue --issue $issue"
+        java -jar $JIRA_JAR $conn $action
     ;;
 
     *) echo "Invalid action"; usage ;;

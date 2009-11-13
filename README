@@ -1,5 +1,7 @@
 Script(s) to tie git and jira through Jira issues and git branches.
 
+INSTALL AND SETUP
+
 To use the git_jira.sh script through a git alias, put git_jira.sh
 somewhere, then execute a shell command like this:
 
@@ -25,20 +27,62 @@ them in the config file.  To set them in your config file:
 Then, if you like, set default project, component, and issue type:
 
 % git config --global jira.component Component1
-% git config --global jira.project MyProject
+% git config --global jira.project PROJ
 % git config --global jira.issuetype Bug
 
-Then you can open a Jira issue and create a git branch based on
-the name of the issue:
+OPENING AN ISSUE AND CREATING A "JIRA BRANCH"
+
+Then you can open a Jira issue and create a git branch (a "jira branch")
+based on the name of the issue:
 
 % git jira open -s "Fix login permissions in user script"
-git branch MyProject-31233 created
+git branch PROJ-31233 created
 
 or, provide a suffix to help you remember what the branch is for:
 
 % git jira open -s "Fix login permissions in user script" -x fix_login_perms
-git branch MyProject-31233_fix_login_perms created
+git branch PROJ-31233_fix_login_perms created
+
+CLOSING AN ISSUE
 
 When done working on the issue, you can resolve it with:
 
-% git jira close MyProject-31233
+% git jira close PROJ-31233
+
+DESCRIBING A JIRA BRANCH OR ISSUE
+
+If you want details on the issue related to a Jira branch, you can use
+jira describe:
+
+% git branch
+  master
+  PROJ-207_my_stupid_proxy_fix
+* PROJ-31233
+% git jira describe
+Data for issue: PROJ-31233
+
+Issue key . . . . . . . . . . : PROJ-31233
+Type  . . . . . . . . . . . . : Bug(1)
+Status  . . . . . . . . . . . : Resolved(5)
+Priority  . . . . . . . . . . : Major(3)
+Assignee  . . . . . . . . . . : me
+Reporter  . . . . . . . . . . : me
+Created . . . . . . . . . . . : 11/11/09 8:51 PM
+Updated . . . . . . . . . . . : 11/12/09 7:58 AM
+Due date  . . . . . . . . . . :
+Summary . . . . . . . . . . . : Weird bug in pre-order routine.
+Description . . . . . . . . . :
+Components  . . . . . . . . . :
+Affects versions  . . . . . . :
+Fix versions  . . . . . . . . :
+Environment . . . . . . . . . :
+Resolution  . . . . . . . . . : Fixed(1)
+Votes . . . . . . . . . . . . : 0
+
+or, describe another branch:
+
+% git jira describe PROJ-207_my_stupid_proxy_fix
+
+or, describe a jira ticket:
+
+% git jira describe PROJ-207
