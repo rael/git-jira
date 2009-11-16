@@ -52,7 +52,7 @@ while [ -z "$JIRA_JAR" -o -z "$GIT_JIRA_SERVER" -o \
             if [ "$GIT_JIRA_PASSWORD" != "$GIT_JIRA_PASSWORD2" ]; then
                 printf "\nPasswords don't match, try again.\n"
             else
-                echo set_config jira.password "[$GIT_JIRA_PASSWORD]"
+                set_config jira.password "[$GIT_JIRA_PASSWORD]"
                 break
             fi
             echo stty $old_tty
@@ -187,6 +187,8 @@ case "$action" in
             issue=$(echo $issue | sed 's/_.*//')
         fi
         action="--action getIssue --issue $issue"
+        java -jar $JIRA_JAR $conn $action
+        action="--action getComments --issue $issue"
         java -jar $JIRA_JAR $conn $action
     ;;
 
