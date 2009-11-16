@@ -1,11 +1,11 @@
 #!/bin/bash
 
 get_config() {
-  echo $(git config --global --get $1)
+    echo $(git config --global --get $1)
 }
 
 set_config() {
-  echo $(git config --global $1 $2)
+    echo $(git config --global $1 $2)
 }
 
 JIRA_JAR=$(get_config jira.jar)
@@ -40,9 +40,24 @@ while [ -z "$JIRA_JAR" -o -z "$GIT_JIRA_SERVER" -o \
     fi
 
     if [ -z "$GIT_JIRA_PASSWORD" ]; then
-        read -e -p "Jira password: " ans
-        GIT_JIRA_PASSWORD=$ans
-        set_config jira.password $GIT_JIRA_PASSWORD
+        while true; do
+            old_tty=$(stty -g)
+            trap "stty $old_tty; exit 0" 0 1 2 3 15
+            stty -echo
+            read -e -p "Jira password: " ans
+            GIT_JIRA_PASSWORD=$ans
+            printf "\n"
+            read -e -p "Confirm jira password: " ans
+            GIT_JIRA_PASSWORD2=$ans
+            if [ "$GIT_JIRA_PASSWORD" != "$GIT_JIRA_PASSWORD2" ]; then
+                printf "\nPasswords don't match, try again.\n"
+            else
+                echo set_config jira.password "[$GIT_JIRA_PASSWORD]"
+                break
+            fi
+            echo stty $old_tty
+            stty $old_tty
+        done
     fi
 done
 
