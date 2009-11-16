@@ -53,15 +53,15 @@ password="--password $GIT_JIRA_PASSWORD"
 conn="$server $user $password"
 
 usage() {
-    printf "Usage: ${0##*/} <open|close|describe> [-a|--assignee <assignee>]"
-    printf e "open options:\n"
+    printf "Usage: ${0##*/} <open|close|describe> [-a|--assignee <assignee>]\n"
+    printf "open options:\n"
     printf "\t[-c|--component] <component> [-p|--project <project>]\n"
     printf "\t[-x|--suffix <suffix>] [-t|--issue_type <issue_type>]\n"
     printf "\t-s|--summary <summary>\n"
     printf "close options:\n"
     printf "\t-i|--issue <issue>\n"
     printf "describe options (defaults to describing issue of current branch):\n"
-    printf -e "\t[-i|--issue <issue OR issue branch name>]\n"
+    printf "\t[-i|--issue <issue OR issue branch name>]\n"
     exit 0
 }
 
