@@ -15,36 +15,32 @@ GIT_JIRA_PASSWORD=$(get_config jira.password)
 
 while [ -z "$JIRA_JAR" -o -z "$GIT_JIRA_SERVER" -o \
      -z "$GIT_JIRA_USER" -o -z "$GIT_JIRA_PASSWORD" ]; do
-    printf "Some config values need to be set.  Enter them and I'll store\n"
-    printf "them in $HOME/.gitconfig for you.\n"
+    printf "Some config values need to be set.  Enter them (with readline\n"
+    printf "editing) and I'll store them in $HOME/.gitconfig for you.\n"
 
     if [ -z "$JIRA_JAR" ]; then
         printf "\nThe Jira CLI Jar file should be installed in the\n"
         printf "release directory where you unpacked Jira CLI\n"
         printf "e.g., /opt/jira-cli-1.5.0/release/jira-cli-1.5.0.jar\n\n"
-        printf "Jira cli jar: "
-        read ans
+        read -e -p "Jira cli jar:" ans
         JIRA_JAR=$ans
         set_config jira.jar $JIRA_JAR
     fi
 
     if [ -z "$GIT_JIRA_SERVER" ]; then
-        printf "Jira server (e.g., http://localhost:8080): "
-        read ans
+        read -e -p "Jira server (e.g., http://localhost:8080): " ans
         GIT_JIRA_SERVER=$ans
         set_config jira.server $GIT_JIRA_SERVER
     fi
 
     if [ -z "$GIT_JIRA_USER" ]; then
-        printf "Jira user: "
-        read ans
+        read -e -p "Jira user: " ans
         GIT_JIRA_USER=$ans
         set_config jira.user $GIT_JIRA_USER
     fi
 
     if [ -z "$GIT_JIRA_PASSWORD" ]; then
-        printf "Jira password: "
-        read ans
+        read -e -p "Jira password: " ans
         GIT_JIRA_PASSWORD=$ans
         set_config jira.password $GIT_JIRA_PASSWORD
     fi
@@ -57,15 +53,15 @@ password="--password $GIT_JIRA_PASSWORD"
 conn="$server $user $password"
 
 usage() {
-    echo "Usage: ${0##*/} <open|close|describe> [-a|--assignee <assignee>]"
-    echo -e "open options:"
-    echo -e "\t[-c|--component] <component> [-p|--project <project>]"
-    echo -e "\t[-x|--suffix <suffix>] [-t|--issue_type <issue_type>]"
-    echo -e "\t-s|--summary <summary>"
-    echo -e "close options:"
-    echo -e "\t-i|--issue <issue>"
-    echo -e "describe options (defaults to describing issue of current branch):"
-    echo -e "\t[-i|--issue <issue OR issue branch name>]"
+    printf "Usage: ${0##*/} <open|close|describe> [-a|--assignee <assignee>]"
+    printf e "open options:\n"
+    printf "\t[-c|--component] <component> [-p|--project <project>]\n"
+    printf "\t[-x|--suffix <suffix>] [-t|--issue_type <issue_type>]\n"
+    printf "\t-s|--summary <summary>\n"
+    printf "close options:\n"
+    printf "\t-i|--issue <issue>\n"
+    printf "describe options (defaults to describing issue of current branch):\n"
+    printf -e "\t[-i|--issue <issue OR issue branch name>]\n"
     exit 0
 }
 
@@ -94,7 +90,7 @@ while true; do
         -t|--issue_type) issue_type=$2; shift 2 ;;
         -x|--suffix) suffix=$2; shift 2 ;;
         --) shift ; break ;;
-        *) echo "[$1] Internal getopt error!" ; exit 1 ;;
+        *) printf "[$1] Internal getopt error!\n" ; exit 1 ;;
     esac
 done
 
@@ -103,35 +99,29 @@ for arg; do
         open) action=open ;;
         close) action=close ;;
         describe) action=describe ;;
-        *) echo "Invalid or extraneous action \"$arg\""; usage ;;
+        *) printf "Invalid or extraneous action \"$arg\"\n"; usage ;;
     esac
 done
 
 if [ -z "$action" ]; then
-    echo "You must provide an action (open|close|describe)"
+    printf "You must provide an action (open|close|describe)\n"
     usage
 fi
-
-#if [ "$action" != "open" -a "$action" != "close" \
-#     "$action" != "describe" ]; then
-#    echo "action must be one of (open|close|describe)"
-#    usage
-#fi
 
 case "$action" in
     open)
         if [ -z "$summary" ]; then
-            echo "You must provide a summary"
+            printf "You must provide a summary\n"
             usage
         fi
 
         if [ -z "$project" ]; then
-            echo "You must provide a project, either on command line or in git config file"
+            printf "You must provide a project, either on command line or in git config file\n"
             usage
         fi
 
         if [ -z "$component" ]; then
-            echo "You must provide a component, either on command line or in git config file"
+            printf "You must provide a component, either on command line or in git config file\n"
             usage
         fi
 
@@ -144,7 +134,7 @@ case "$action" in
         jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --summary "$summary" | gawk '{ print $2}')
 
         if [ $? -ne 0 ]; then
-            echo "Creation failed"
+            printf "Creation failed\n"
             exit 0
         fi
 
@@ -153,14 +143,14 @@ case "$action" in
             issue="${issue}_${suffix}"
         fi
 
-        git fetch || { echo "Git fetch failed"; exit 1; }
+        git fetch || { printf "Git fetch failed\n"; exit 1; }
         r=$(git branch ${issue} origin/master 2>&1)
         if [ $? -ne 0 ]; then
-            echo "Git branch creation failed:"
-            echo $r
+            printf "Git branch creation failed:\n"
+            printf "$r\n"
             exit 1
         fi
-        echo "git branch ${issue} created"
+        printf "git branch ${issue} created\n"
     ;;
 
     close)
@@ -173,7 +163,7 @@ case "$action" in
         branch=$(git branch | grep '\*' | sed 's/\* //')
         if [ -z "$issue" ]; then
             if [ "$branch" == "master" ]; then
-                echo "You need to supply an issue if you are not on an issue branch."
+                printf "You need to supply an issue if you are not on an issue branch.\n"
                 usage
                 exit 1
             fi
@@ -185,5 +175,5 @@ case "$action" in
         java -jar $JIRA_JAR $conn $action
     ;;
 
-    *) echo "Invalid action"; usage ;;
+    *) printf "Invalid action\n"; usage ;;
 esac
