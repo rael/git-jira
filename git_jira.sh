@@ -94,12 +94,12 @@ usage() {
     printf "close options:\n"
     printf "\t-i|--issue <issue>\n"
     printf "describe options (defaults to describing issue of current branch):\n"
-    printf "\t[-i|--issue <issue OR issue branch name>]\n"
+    printf "\t[-i|--issue <issue OR issue branch name>] [-v|--verbose]\n"
     exit 0
 }
 
 # Process command line options
-TEMP=$(getopt -o 'a:c:i:p:s:t:x:' --long assignee:,component:,issue:,project:,summary:,issue_type:,suffix: -n 'git_jira' -- "$@")
+TEMP=$(getopt -o 'a:c:i:p:s:t:vx:' --long assignee:,component:,issue:,project:,summary:,issue_type:,verbose,suffix: -n 'git_jira' -- "$@")
 
 [ $? != 0 ] && usage
 
@@ -112,6 +112,7 @@ issue_type=${issue_type:-Bug}
 assignee=$GIT_JIRA_USER
 summary=
 suffix=
+verbose=false
 
 while true; do
     case "$1" in
@@ -121,6 +122,7 @@ while true; do
         -p|--project) project=$2; shift 2 ;;
         -s|--summary) summary=$2; shift 2 ;;
         -t|--issue_type) issue_type=$2; shift 2 ;;
+        -v|--verbose) verbose=true; shift 2 ;;
         -x|--suffix) suffix=$2; shift 2 ;;
         --) shift ; break ;;
         *) printf "[$1] Internal getopt error!\n" ; exit 1 ;;
@@ -168,7 +170,7 @@ case "$action" in
 
         if [ $? -ne 0 ]; then
             printf "Creation failed\n"
-            exit 0
+            exit 1
         fi
 
         issue=$jissue
@@ -189,7 +191,7 @@ case "$action" in
     close)
         issue="--issue $issue"
         action="--action progressIssue $issue"
-        java -jar $JIRA_JAR $conn $action --step "Resolve Issue" --resolution "Fixed"
+        java -jar $JIRA_JAR $conn $action --step "Resolve Issue" --resolution "Fixed" || exit 1
     ;;
 
     describe)
@@ -205,9 +207,11 @@ case "$action" in
             issue=$(echo $issue | sed 's/_.*//')
         fi
         action="--action getIssue --issue $issue"
-        java -jar $JIRA_JAR $conn $action
-        action="--action getComments --issue $issue"
-        java -jar $JIRA_JAR $conn $action
+        java -jar $JIRA_JAR $conn $action || exit 1
+        if $verbose; then
+            action="--action getComments --issue $issue"
+            java -jar $JIRA_JAR $conn $action || exit 1
+        fi
     ;;
 
     *) printf "Invalid action\n"; usage ;;
