@@ -5,7 +5,7 @@ get_config() {
 }
 
 set_config() {
-    echo $(git config --global $1 $2)
+    git config --global $1 $2
 }
 
 JIRA_JAR=$(get_config jira.jar)
@@ -60,6 +60,24 @@ while [ -z "$JIRA_JAR" -o -z "$GIT_JIRA_SERVER" -o \
         done
     fi
 done
+
+GIT_JIRA_SETALIAS=$(get_config jira.setalias)
+
+if [ -z "$GIT_JIRA_SETALIAS" ]; then
+    GIT_JIRA_ALIAS=$(get_config alias.jira)
+    printf "You do not have an alias for git_jira.sh in your gitconfig file.\n"
+    read -e -p "Would you like me to add one so you can say 'git jira' instead? ([Y]/N) " ans
+    ans=$(echo $ans | tr [a-z] [A-Z])
+    me=$(readlink -f $0)
+    if [ "$ans" == "N" -o "$ans" == "NO" ]; then
+        printf "If you'd like to set it in the future, just do:\n"
+        printf "%% git config --global alias.jira '!%s'\n\n" $me
+    else
+        set_config alias.jira "!$me"
+        printf "Set alias.jira to "!$me" in $HOME/.gitconfig\n"
+    fi
+    set_config jira.setalias "true"
+fi
 
 # Create "connection string" for Jira server
 server="--server $GIT_JIRA_SERVER"
