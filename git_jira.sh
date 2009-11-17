@@ -122,7 +122,7 @@ while true; do
         -p|--project) project=$2; shift 2 ;;
         -s|--summary) summary=$2; shift 2 ;;
         -t|--issue_type) issue_type=$2; shift 2 ;;
-        -v|--verbose) verbose=true; shift 2 ;;
+        -v|--verbose) verbose=true; shift ;;
         -x|--suffix) suffix=$2; shift 2 ;;
         --) shift ; break ;;
         *) printf "[$1] Internal getopt error!\n" ; exit 1 ;;
@@ -210,7 +210,7 @@ case "$action" in
         java -jar $JIRA_JAR $conn $action || exit 1
         if $verbose; then
             action="--action getComments --issue $issue"
-            java -jar $JIRA_JAR $conn $action || exit 1
+            java -jar $JIRA_JAR $conn $action | sed 's/Data for [0-9][0-9]*comments/Comments:/'
         fi
     ;;
 
