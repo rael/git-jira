@@ -2,22 +2,19 @@ Script(s) to tie git and jira through Jira issues and git branches.
 
 INSTALL AND SETUP
 
-To use the git_jira.sh script through a git alias, put git_jira.sh
-somewhere, then execute a shell command like this:
-
-% git config --global alias.jira '!/home/me/bin/git_jira.sh'
-
 Download the Jira CLI from Atlassian.  You can go to this link:
 
 http://confluence.atlassian.com/display/JIRAEXT/JIRA+Command+Line+Interface
 
-or google 'jira-cli'.  Unpack the zip file somewhere.  Make sure you
-have a reasonably recent java installed.
+Download from the 'Download JAR' link.  Unpack the zip file in an install
+directory.  Make sure you have a reasonably recent Java installed.
 
-You will need to specify the location of the Jira CLI jar file,
-the Jira server, your Jira user, and Jira password.  The script
-will prompt you for these (and save them) if you do not provide
-them in the config file.  To set them in your config file:
+Copy the git_jira.sh script somewhere on your path.  To get started,
+just type in 'git_jira.sh'.  The script will prompt you for the
+location of the jira-cli jar file, the URL of the Jira server, your
+Jira username, and Jira password.
+
+To set these in your config file by hand:
 
 % git config --global jira.jar <path_to_jar>
 % git config --global jira.server <url for Jira server>
@@ -29,6 +26,10 @@ Then, if you like, set default project, component, and issue type:
 % git config --global jira.component Component1
 % git config --global jira.project PROJ
 % git config --global jira.issuetype Bug
+
+The script will also ask if you want to set an alias for git_jira.sh
+in your gitconfig file, so you can type 'git jira' instead of the
+shell script itself.
 
 OPENING AN ISSUE AND CREATING A "JIRA BRANCH"
 
@@ -81,8 +82,8 @@ Votes . . . . . . . . . . . . : 0
 
 or, describe another branch:
 
-% git jira describe PROJ-207_my_stupid_proxy_fix
+% git jira describe -i PROJ-207_my_stupid_proxy_fix
 
 or, describe a jira ticket:
 
-% git jira describe PROJ-207
+% git jira describe -i PROJ-207
