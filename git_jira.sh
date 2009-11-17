@@ -1,11 +1,11 @@
 #!/bin/bash
 
 get_config() {
-    echo $(git config --global --get $1)
+    echo $(git config --global --get $1 || exit 1)
 }
 
 set_config() {
-    git config --global $1 $2
+    git config --global $1 $2 || exit 1
 }
 
 JIRA_JAR=$(get_config jira.jar)
@@ -22,7 +22,7 @@ while [ -z "$JIRA_JAR" -o -z "$GIT_JIRA_SERVER" -o \
         printf "\nThe Jira CLI Jar file should be installed in the\n"
         printf "release directory where you unpacked Jira CLI\n"
         printf "e.g., /opt/jira-cli-1.5.0/release/jira-cli-1.5.0.jar\n\n"
-        read -e -p "Jira cli jar:" ans
+        read -e -p "Jira cli jar: " ans
         JIRA_JAR=$ans
         set_config jira.jar $JIRA_JAR
     fi
@@ -48,14 +48,14 @@ while [ -z "$JIRA_JAR" -o -z "$GIT_JIRA_SERVER" -o \
             GIT_JIRA_PASSWORD=$ans
             printf "\n"
             read -e -p "Confirm jira password: " ans
+            printf "\n"
             GIT_JIRA_PASSWORD2=$ans
             if [ "$GIT_JIRA_PASSWORD" != "$GIT_JIRA_PASSWORD2" ]; then
                 printf "\nPasswords don't match, try again.\n"
             else
-                set_config jira.password "[$GIT_JIRA_PASSWORD]"
+                set_config jira.password "$GIT_JIRA_PASSWORD"
                 break
             fi
-            echo stty $old_tty
             stty $old_tty
         done
     fi
@@ -67,6 +67,7 @@ if [ -z "$GIT_JIRA_SETALIAS" ]; then
     GIT_JIRA_ALIAS=$(get_config alias.jira)
     printf "You do not have an alias for git_jira.sh in your gitconfig file.\n"
     read -e -p "Would you like me to add one so you can say 'git jira' instead? ([Y]/N) " ans
+    printf "\n"
     ans=$(echo $ans | tr [a-z] [A-Z])
     me=$(readlink -f $0)
     if [ "$ans" == "N" -o "$ans" == "NO" ]; then
@@ -74,7 +75,7 @@ if [ -z "$GIT_JIRA_SETALIAS" ]; then
         printf "%% git config --global alias.jira '!%s'\n\n" $me
     else
         set_config alias.jira "!$me"
-        printf "Set alias.jira to "!$me" in $HOME/.gitconfig\n"
+        printf "Set alias.jira to !$me\n"
     fi
     set_config jira.setalias "true"
 fi
