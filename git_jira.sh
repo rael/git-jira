@@ -1,4 +1,6 @@
 #!/bin/bash
+# Copyright 2009 William S. Lear
+# Distributed under terms of the GNU General Public License (see LICENSE file)
 
 get_config() {
     echo $(git config --global --get $1 || exit 1)

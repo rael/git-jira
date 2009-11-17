@@ -1,4 +1,6 @@
 Script(s) to tie git and jira through Jira issues and git branches.
+Copyright 2009 William S. Lear.  Distributed under terms of the GNU General
+Public License (see LICENSE file).
 
 INSTALL AND SETUP
 
