@@ -88,21 +88,27 @@ user="--user $GIT_JIRA_USER"
 password="--password $GIT_JIRA_PASSWORD"
 conn="$server $user $password"
 
+USAGE="Usage: ${0##*/} <open|close|describe>
+
+open options (-d opens editor):
+    [-a|--assignee <assignee>] [-c|--component] <component> [-d|--description]
+    [-p|--project <project>] [-x|--suffix <suffix>]
+    [-t|--issue_type <issue_type>] -s|--summary <summary>
+
+close options:
+    -i|--issue <issue>
+
+describe options (defaults to describing issue of current branch):
+    [-i|--issue <issue OR issue branch name>] [-v|--verbose]
+"
+
 usage() {
-    printf "Usage: ${0##*/} <open|close|describe> [-a|--assignee <assignee>]\n"
-    printf "open options:\n"
-    printf "\t[-c|--component] <component> [-p|--project <project>]\n"
-    printf "\t[-x|--suffix <suffix>] [-t|--issue_type <issue_type>]\n"
-    printf "\t-s|--summary <summary>\n"
-    printf "close options:\n"
-    printf "\t-i|--issue <issue>\n"
-    printf "describe options (defaults to describing issue of current branch):\n"
-    printf "\t[-i|--issue <issue OR issue branch name>] [-v|--verbose]\n"
+    echo "$USAGE"
     exit 0
 }
 
 # Process command line options
-TEMP=$(getopt -o 'a:c:i:p:s:t:vx:' --long assignee:,component:,issue:,project:,summary:,issue_type:,verbose,suffix: -n 'git_jira' -- "$@")
+TEMP=$(getopt -o 'a:cdi:p:s:t:vx:' --long assignee:,component:,description,issue:,project:,summary:,issue_type:,verbose,suffix: -n 'git_jira' -- "$@")
 
 [ $? != 0 ] && usage
 
@@ -121,6 +127,7 @@ while true; do
     case "$1" in
         -a|--assignee) assignee=$2; shift 2 ;;
         -c|--component) component=$2; shift 2 ;;
+        -d|--description) description=true; shift ;;
         -i|--issue) issue=$2; shift 2 ;;
         -p|--project) project=$2; shift 2 ;;
         -s|--summary) summary=$2; shift 2 ;;
@@ -168,17 +175,61 @@ case "$action" in
         project="--project $project"
         issue_type="--type $issue_type"
         action="--action createIssue $project $assignee $issue_type"
+        if $description; then
+            tmpfile=/tmp/$$.git-jira
+            trap "rm -f $tmpfile" 0 1 2 3 15
+            editor=$GIT_EDITOR
+            if [ -z "$editor" ]; then
+                editor=$VISUAL
+            fi
+            if [ -z "$editor" ]; then
+                editor=$EDITOR
+            fi
+            if [ -z "$editor" ]; then
+                editor=vi
+            fi
+            cat << EOF > $tmpfile
 
-        jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --summary "$summary" | gawk '{ print $2}')
+# Enter a description above; exit to abort, exit with no changes or delete
+# all lines or lines that do not have '#' in front.
+EOF
 
-        if [ $? -ne 0 ]; then
-            printf "Creation failed\n"
-            exit 1
+            $editor $tmpfile
+            if [ $? -ne 0 ]; then
+                echo "Editor session failed, aborting create"
+                exit 0
+            fi
+
+            dlines=$(grep -v '^ *#' $tmpfile | grep -v '^$')
+            ndlines=$(grep -v '^ *#' $tmpfile | grep -v '^$' | wc -l | gawk '{ print $1; }' )
+            if [ $ndlines -gt 0 ]; then
+                jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --description "$dlines" --summary "$summary" | gawk '{ print $2}')
+                rc=$?
+                if [ $rc -ne 0 ]; then
+                    printf "Issue creation failed: %s\n" $jissue
+                    exit 1
+                fi
+            else
+                echo "Issue creation aborted"
+                exit 0
+            fi
+            rm $tmpfile
+        else
+            jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --summary "$summary" | gawk '{ print $2}')
+            if [ $rc -ne 0 ]; then
+                printf "Issue creation failed: %s\n" $jissue
+                exit 1
+            fi
         fi
 
         issue=$jissue
         if [ -n "$suffix" ]; then
             issue="${issue}_${suffix}"
+        fi
+
+        if [ -z "$issue" ]; then
+            echo "NO ISSUE!"
+            exit 1
         fi
 
         git fetch || { printf "Git fetch failed\n"; exit 1; }
