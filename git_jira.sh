@@ -108,7 +108,7 @@ usage() {
 }
 
 # Process command line options
-TEMP=$(getopt -o 'a:cdi:p:s:t:vx:' --long assignee:,component:,description,issue:,project:,summary:,issue_type:,verbose,suffix: -n 'git_jira' -- "$@")
+TEMP=$(getopt -o 'a:c:di:p:s:t:vx:' --long assignee:,component:,description,issue:,project:,summary:,issue_type:,verbose,suffix: -n 'git_jira' -- "$@")
 
 [ $? != 0 ] && usage
 
