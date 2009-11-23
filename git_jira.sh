@@ -198,8 +198,8 @@ EOF
                 exit 1
             fi
 
-            dlines=$(grep -v '^ *#' $tmpfile | grep -v '^$')
-            ndlines=$(grep -v '^ *#' $tmpfile | grep -v '^$' | wc -l | gawk '{ print $1; }' )
+            dlines=$(grep -v '^ *#' $tmpfile)
+            ndlines=$(grep -v '^ *#' $tmpfile | wc -l | gawk '{ print $1; }' )
             if [ $ndlines -gt 0 ]; then
                 jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --description "$dlines" --summary "$summary")
                 if [ $? -ne 0 ]; then
