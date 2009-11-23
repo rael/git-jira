@@ -115,6 +115,7 @@ TEMP=$(getopt -o 'a:c:di:p:s:t:vx:' --long assignee:,component:,description,issu
 eval set -- "$TEMP"
 
 component=$(get_config jira.component)
+description=false
 project=$(get_config jira.project)
 issue_type=$(get_config jira.issuetype)
 issue_type=${issue_type:-Bug}
@@ -178,16 +179,12 @@ case "$action" in
         if $description; then
             tmpfile=/tmp/$$.git-jira
             trap "rm -f $tmpfile" 0 1 2 3 15
+
             editor=$GIT_EDITOR
-            if [ -z "$editor" ]; then
-                editor=$VISUAL
-            fi
-            if [ -z "$editor" ]; then
-                editor=$EDITOR
-            fi
-            if [ -z "$editor" ]; then
-                editor=vi
-            fi
+            [ -z "$editor" ] && editor=$VISUAL
+            [ -z "$editor" ] && editor=$EDITOR
+            [ -z "$editor" ] && editor=vi
+
             cat << EOF > $tmpfile
 
 # Enter a description above; exit to abort, exit with no changes or delete
@@ -197,42 +194,44 @@ EOF
             $editor $tmpfile
             if [ $? -ne 0 ]; then
                 echo "Editor session failed, aborting create"
-                exit 0
+                rm -f $tmpfile
+                exit 1
             fi
 
             dlines=$(grep -v '^ *#' $tmpfile | grep -v '^$')
             ndlines=$(grep -v '^ *#' $tmpfile | grep -v '^$' | wc -l | gawk '{ print $1; }' )
             if [ $ndlines -gt 0 ]; then
-                jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --description "$dlines" --summary "$summary" | gawk '{ print $2}')
-                rc=$?
-                if [ $rc -ne 0 ]; then
-                    printf "Issue creation failed: %s\n" $jissue
+                jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --description "$dlines" --summary "$summary")
+                if [ $? -ne 0 ]; then
+                    printf "Issue creation failed.\n"
+                    rm -f $tmpfile
                     exit 1
                 fi
+                jissue=$(echo $jissue | gawk '{ print $2}')
             else
                 echo "Issue creation aborted"
+                rm -f $tmpfile
                 exit 0
             fi
-            rm $tmpfile
+            rm -f $tmpfile
         else
-            jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --summary "$summary" | gawk '{ print $2}')
-            if [ $rc -ne 0 ]; then
-                printf "Issue creation failed: %s\n" $jissue
+            jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --summary "$summary")
+            if [ $? -ne 0 ]; then
+                printf "Issue creation failed.\n"
                 exit 1
             fi
+            jissue=$(echo $jissue | gawk '{ print $2}')
         fi
 
         issue=$jissue
-        if [ -n "$suffix" ]; then
-            issue="${issue}_${suffix}"
-        fi
+        [ -n "$suffix" ] && issue="${issue}_${suffix}"
 
         if [ -z "$issue" ]; then
             echo "NO ISSUE!"
             exit 1
         fi
 
-        git fetch || { printf "Git fetch failed\n"; exit 1; }
+        git fetch || { printf "Git fetch failed.\n"; exit 1; }
         r=$(git branch ${issue} origin/master 2>&1)
         if [ $? -ne 0 ]; then
             printf "Git branch creation failed:\n"
