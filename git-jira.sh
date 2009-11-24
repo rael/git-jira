@@ -3,7 +3,7 @@
 # Distributed under terms of the GNU General Public License (see LICENSE file)
 
 get_config() {
-    echo $(git config --global --get $1 || exit 1)
+    git config --global --get $1 || exit 1
 }
 
 set_config() {
@@ -21,10 +21,10 @@ while [ -z "$JIRA_JAR" -o -z "$GIT_JIRA_SERVER" -o \
     printf "editing) and I'll store them in $HOME/.gitconfig for you.\n"
 
     if [ -z "$JIRA_JAR" ]; then
-        printf "\nThe Jira CLI Jar file should be installed in the\n"
+        printf "\nThe Jira CLI jar file should be installed in the\n"
         printf "release directory where you unpacked Jira CLI\n"
         printf "e.g., /opt/jira-cli-1.5.0/release/jira-cli-1.5.0.jar\n\n"
-        read -e -p "Jira cli jar: " ans
+        read -e -p "Jira CLI jar: " ans
         JIRA_JAR=$ans
         set_config jira.jar $JIRA_JAR
     fi
