@@ -67,7 +67,7 @@ GIT_JIRA_SETALIAS=$(get_config jira.setalias)
 
 if [ -z "$GIT_JIRA_SETALIAS" ]; then
     GIT_JIRA_ALIAS=$(get_config alias.jira)
-    printf "You do not have an alias for git_jira.sh in your gitconfig file.\n"
+    printf "You do not have an alias for git-jira.sh in your gitconfig file.\n"
     read -e -p "Would you like me to add one so you can say 'git jira' instead? ([Y]/N) " ans
     printf "\n"
     ans=$(echo $ans | tr [a-z] [A-Z])
@@ -108,7 +108,7 @@ usage() {
 }
 
 # Process command line options
-TEMP=$(getopt -o 'a:c:di:p:s:t:vx:' --long assignee:,component:,description,issue:,project:,summary:,issue_type:,verbose,suffix: -n 'git_jira' -- "$@")
+TEMP=$(getopt -o 'a:c:di:p:s:t:vx:' --long assignee:,component:,description,issue:,project:,summary:,issue_type:,verbose,suffix: -n 'git-jira' -- "$@")
 
 [ $? != 0 ] && usage
 
@@ -154,6 +154,24 @@ if [ -z "$action" ]; then
     usage
 fi
 
+jira_cli="java -jar $JIRA_JAR $conn"
+
+version_to_int() {
+    echo $1 | gawk -F '.' '{printf("%03d%03d%03d\n", $1, $2, $3); }'
+}
+
+_jira_cli_version() {
+    v=$($jira_cli --version 2>&1)
+    if [ $? -ne 0 ]; then
+        echo $JIRA_JAR | sed 's/.*jira-cli-\([0-9][0-9]*[.][0-9][0-9]*[.][0-9][0-9]*\)[.]jar/\1/'
+    else
+        echo $v | gawk '{print $3}'
+    fi
+}
+
+jira_cli_version=$(version_to_int $(_jira_cli_version))
+version_with_comp_list=$(version_to_int 1.6.0)
+
 case "$action" in
     open)
         if [ -z "$summary" ]; then
@@ -163,11 +181,18 @@ case "$action" in
 
         if [ -z "$project" ]; then
             printf "You must provide a project, either on command line or in git config file\n"
+            echo "Available Projects:"
+            $jira_cli --action getProjectList --project $project
             usage
         fi
 
         if [ -z "$component" ]; then
             printf "You must provide a component, either on command line or in git config file\n"
+
+            if [ $jira_cli_version -ge $version_with_comp_list ]; then
+                echo "Available Components for project $project:"
+                $jira_cli --action getComponentList --project $project
+            fi
             usage
         fi
 
@@ -201,7 +226,7 @@ EOF
             dlines=$(grep -v '^ *#' $tmpfile)
             ndlines=$(grep -v '^ *#' $tmpfile | wc -l | gawk '{ print $1; }' )
             if [ $ndlines -gt 0 ]; then
-                jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --description "$dlines" --summary "$summary")
+                jissue=$($jira_cli $action --components "$component" --description "$dlines" --summary "$summary")
                 if [ $? -ne 0 ]; then
                     printf "Issue creation failed.\n"
                     rm -f $tmpfile
@@ -215,7 +240,7 @@ EOF
             fi
             rm -f $tmpfile
         else
-            jissue=$(java -jar $JIRA_JAR $conn $action --components "$component" --summary "$summary")
+            jissue=$($jira_cli $action --components "$component" --summary "$summary")
             if [ $? -ne 0 ]; then
                 printf "Issue creation failed.\n"
                 exit 1
@@ -244,7 +269,7 @@ EOF
     close)
         issue="--issue $issue"
         action="--action progressIssue $issue"
-        java -jar $JIRA_JAR $conn $action --step "Resolve Issue" --resolution "Fixed" || exit 1
+        $jira_cli $action --step "Resolve Issue" --resolution "Fixed" || exit 1
     ;;
 
     describe)
@@ -260,10 +285,10 @@ EOF
             issue=$(echo $issue | sed 's/_.*//')
         fi
         action="--action getIssue --issue $issue"
-        java -jar $JIRA_JAR $conn $action || exit 1
+        $jira_cli $action || exit 1
         if $verbose; then
             action="--action getComments --issue $issue"
-            java -jar $JIRA_JAR $conn $action | sed 's/Data for [0-9][0-9]*comments/Comments:/'
+            $jira_cli $action | sed 's/Data for [0-9][0-9]*comments/Comments:/'
         fi
     ;;
 

@@ -4,15 +4,16 @@ Public License (see LICENSE file).
 
 INSTALL AND SETUP
 
-Download the Jira CLI from Atlassian.  You can go to this link:
+Download the Jira CLI from Atlassian.  The git-jira script works with
+Jira CLI versions 1.5.0 and later.  You can go to this link:
 
 http://confluence.atlassian.com/display/JIRAEXT/JIRA+Command+Line+Interface
 
 Download from the 'Download JAR' link.  Unpack the zip file in an install
 directory.  Make sure you have a reasonably recent Java installed.
 
-Copy the git_jira.sh script somewhere on your path.  To get started,
-just type in 'git_jira.sh'.  The script will prompt you for the
+Copy the git-jira.sh script somewhere on your path.  To get started,
+just type in 'git-jira.sh'.  The script will prompt you for the
 location of the jira-cli jar file, the URL of the Jira server, your
 Jira username, and Jira password.
 
@@ -29,7 +30,7 @@ Then, if you like, set default project, component, and issue type:
 % git config --global jira.project PROJ
 % git config --global jira.issuetype Bug
 
-The script will also ask if you want to set an alias for git_jira.sh
+The script will also ask if you want to set an alias for git-jira.sh
 in your gitconfig file, so you can type 'git jira' instead of the
 shell script itself.
 
