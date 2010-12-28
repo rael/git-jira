@@ -2,7 +2,9 @@ Script(s) to tie git and jira through Jira issues and git branches.
 Copyright 2009 William S. Lear.  Distributed under terms of the GNU General
 Public License (see LICENSE file).
 
-NOTE: there is an issue, logged in the github project, when running the
+CYGWIN NOTES:
+
+There is an issue, logged in the github project, when running the
 script on cygwin.  When I cloned and installed the file, there were
 carriage return characters in the file, which seems to confuse bash
 on cygwin for some reason.  To work around this, edit the file in 'binary'
@@ -10,6 +12,18 @@ mode (vim -b will do the trick), and then remove the carriage returns
 (:%s/^M//), where ^M is achieved by hitting control-V then M.  I'm sure
 there is a better way, but for now, just wanted to point out this
 annoyance which I will try to track down and fix.
+
+A few more cygwin gotchas:
+
+  1) You need to install the util-linux package to provide the
+     'getopts' command.
+
+  2) You must specify your path to the jar file in a Windows-friendly
+     way, e.g., your config file will need to have a value for the
+     jar file that looks something like this (note double backslashes):
+
+[jira]
+	jar = C:\\cygwin\\home\\kkringle\\devel\\jira-cli-1.5.0\\release\\jira-cli-1.5.0.jar
 
 INSTALL AND SETUP
 
